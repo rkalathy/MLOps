@@ -1,0 +1,35 @@
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Python Bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Data Files (optional - if data is large or confidential)
+data/*.csv
+
+# Model Files
+*.pkl
+model/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDEs/Editors
+.vscode/
+*.code-workspace
+.idea/
+
+# Jupyter Notebook Output (optional)
+*.nbconvert.ipynb
