@@ -1,3 +1,3 @@
 def add(a, b):
-    # Hello World
+    # No comment
     return a + b
