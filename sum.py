@@ -1,3 +1,8 @@
 def add(a, b):
-    # Hello World
+    # No comments
     return a + b
+
+def subtract(a, b):
+    # No comments
+    return a - b
+
