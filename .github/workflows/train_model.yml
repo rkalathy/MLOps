@@ -25,6 +25,14 @@ jobs:
         - name: Train Model
           run: python ml-loan-demo/loan-model.py
 
+        - name: Generate tag
+          id: version
+          run: |
+            VERSION="v$(date +%Y%m%D%H%M%S)"
+            echo "VERSION=$VERSION" > $GITHUB_ENV
+            echo $VERSION > version.txt
+
+
         - name: Upload Model Artifact
           uses: actions/upload-artifact@v4
           with:
@@ -34,12 +42,13 @@ jobs:
         - name: Create GitHub Release
           id: create_release
           uses: actions/create-release@v1
-          env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          env: 
+            GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           with:
-              tag_name: v
-              release_name: ""
+              tag_name: ${{env.VERSION}}
+              release_name: "Release ${{env.VERSION}}"
               body: "Automated release"
+          
 
         - name: Upload version file
           uses: actions/upload-release-asset@v1
@@ -47,6 +56,6 @@ jobs:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
             upload_url: ${{ steps.create_release.outputs.upload_url }}
-            asset_path: version.txt
-            asset_name: version.txt
-            asset_content_type: text/plain
+            asset_path: ml-loan-demo/model/loan_model.pkl
+            asset_name: loan_model.pkl
+            asset_content_type: application/octet-stream
