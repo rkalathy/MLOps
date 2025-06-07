@@ -1,5 +1,8 @@
 name : Bump version
 
+permissions: 
+    contents: write
+
 on: 
   pull_request:
     types : [closed]
@@ -15,7 +18,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-          persist-credential: true
+          persist-credentials: true
     
     - name: Bump Version
       id: bump
@@ -24,7 +27,7 @@ jobs:
         new_version=$((version + 1))
         echo $new_version > version.txt
         git config user.name "github bot"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.email "github-actions@users.noreply.github.com"
         git add version.txt
         git commit -m "chore: bump version to v$new_version"
         git push origin HEAD:main
