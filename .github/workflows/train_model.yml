@@ -1,0 +1,38 @@
+name : Train model
+
+on:
+    push: 
+        branches: [main]
+
+jobs: 
+    train: 
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout Repo
+          uses: actions/checkout@v3
+  
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with: 
+                python-version: "3.11"
+
+        - name: Install Dependencies
+          run: |
+            pip install -r ml-loan-demo/requirements.txt
+
+        - name: Train Model
+          run: python ml-loan-demo/loan-model.py
+
+        - name: Upload Model Artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: loan-model-pkl
+            path: ml-loan-demo/model/loan_model.pkl
+
+        - name: Create Release
+          uses: softprops/action-gh-release@v2
+          with:
+            files: ml-loan-demo/model/loan_model.pkl
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
