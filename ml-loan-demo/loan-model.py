@@ -8,7 +8,9 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv(".env.prod")
-data_path = os.getenv("DATA_PATH")
+# data_path = os.getenv("DATA_PATH")
+
+data_path = "./data/loan_data_dev.csv"
 
 df = pd.read_csv(data_path)
 df = pd.get_dummies(df, drop_first=True)
