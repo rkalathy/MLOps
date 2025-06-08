@@ -36,7 +36,7 @@ print(f"MAE: {mae:.2f}")
 print(f"R² Score: {r2:.2f}")
 
 os.makedirs("model", exist_ok=True)
-with open("ml-loan-demo/model/loan_model.pkl", "wb") as f:
+with open("/models/loan_model.pkl", "wb") as f:
     pickle.dump(model, f)
 
-print("\n✅ Model saved to ml-loan-demo/model/loan_model.pkl")
+print("\n✅ Model saved to /models/loan_model.pkl")
