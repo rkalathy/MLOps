@@ -18,7 +18,6 @@ data/*.csv
 
 # Model Files
 *.pkl
-model/
 
 # Logs
 *.log
