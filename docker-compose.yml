@@ -1,22 +1,36 @@
-version: "3.9"
-
 services:
-    trainer :
-      build: "./ml-loan-demo"
-      volumes: 
-        - mlops_loan-model-data:/data
-        - mlops_loan-model:/models
-      profiles: ["trainer"]
+  init-data:
+    image: busybox
+    command: sh -c "cp /fromhost/loan_data_dev.csv /data/loan_data_dev.csv"
+    volumes:
+      - ./ml-loan-demo/data:/fromhost:ro
+      - loan-data-vol:/data
+    profiles:
+      - train
 
-    # api:
-    #   build: "./loan-api"
-    #   ports: 
-    #     - "8000:8000"
-    #   volumes: 
-    #     - loan-model:/models
-    #   depends_on:
-    #     - trainer 
-  
+  trainer:
+    build:
+      context: ./ml-loan-demo
+      dockerfile: dockerfile
+    depends_on:
+      - init-data
+    volumes:
+      - loan-data-vol:/data
+      - loan-model-vol:/models
+    profiles:
+      - train
+
+  api:
+    build:
+      context: ./loan-api
+      dockerfile: dockerfile
+    volumes:
+      - loan-model-vol:/models
+    ports:
+      - "8000:8000"
+    profiles:
+      - api
+
 volumes:
-  mlops_loan-model:
-  mlops_loan-model-data:
+  loan-data-vol:
+  loan-model-vol:
