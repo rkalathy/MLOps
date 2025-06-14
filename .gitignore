@@ -19,6 +19,9 @@ data/*.csv
 # Model Files
 *.pkl
 
+# MLFlow
+mlruns
+
 # Logs
 *.log
 
