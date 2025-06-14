@@ -11,6 +11,8 @@ parser.add_argument("--data", type=str, default = "ml-loan-demo/raw_data.csv")
 
 args = parser.parse_args()
 
+# mlflow.set_tracking_uri("http://localhost:5000")
+
 with mlflow.start_run():
 
     df = pd.read_csv(args.data)

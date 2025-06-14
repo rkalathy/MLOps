@@ -11,3 +11,6 @@ python .\ml-loan-demo\loan-model.py
 mlflow ui
 
 Navigate to - http://127.0.0.1:5000/
+
+
+mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root s3://mlflow-artifacts-RANDOMTEXT --host 0.0.0.0 --port 5000
