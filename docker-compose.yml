@@ -1,0 +1,36 @@
+services:
+  init-data:
+    image: busybox
+    command: sh -c "cp /fromhost/loan_data_dev.csv /data/loan_data_dev.csv"
+    volumes:
+      - ./ml-loan-demo/data:/fromhost:ro
+      - loan-data-vol:/data
+    profiles:
+      - train
+
+  trainer:
+    build:
+      context: ./ml-loan-demo
+      dockerfile: dockerfile
+    depends_on:
+      - init-data
+    volumes:
+      - loan-data-vol:/data
+      - loan-model-vol:/models
+    profiles:
+      - train
+
+  api:
+    build:
+      context: ./loan-api
+      dockerfile: dockerfile
+    volumes:
+      - loan-model-vol:/models
+    ports:
+      - "8000:8000"
+    profiles:
+      - api
+
+volumes:
+  loan-data-vol:
+  loan-model-vol:
