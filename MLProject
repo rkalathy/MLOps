@@ -3,4 +3,4 @@ entry_points:
   main:
     parameters: 
       x : { type: float, default : 0}
-    command: "python ml-loan-demo/loan-model.py"
+    command: "python ml-loan-demo/loan-model.py --x 0"
