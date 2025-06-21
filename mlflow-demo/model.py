@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse
 import mlflow
 import mlflow.sklearn
@@ -6,6 +5,11 @@ from sklearn.datasets import load_iris
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
+import dagshub
+
+
+
+dagshub.init(repo_owner='frontenddevtrainer', repo_name='MLOps', mlflow=True)
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -82,8 +86,8 @@ def main():
         mlflow.sklearn.log_model(
             sk_model=model,
             artifact_path="rf_model",
-            registered_model_name="MyRF"
         )
+
 
         print(f"Run ID: {mlflow.active_run().info.run_id}")
         print(f"Accuracy: {acc:.4f}")
