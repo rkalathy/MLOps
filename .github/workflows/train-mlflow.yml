@@ -1,0 +1,84 @@
+# .github/workflows/ci-cd.yml
+name: Train & Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with: 
+            python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run training
+        env:
+          MLFLOW_TRACKING_URI: https://dagshub.com/frontenddevtrainer/MLOps.mlflow
+          DAGSHUB_USERNAME: ${{ secrets.DAGSHUB_USERNAME }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: python mlflow-demo/model.py \
+              --n-estimators 100 \
+              --max-depth 5
+
+      - name: Upload mlruns
+        uses: actions/upload-artifact@v3
+        with:
+          name: mlruns
+          path: mlruns/
+
+  deploy:
+    needs: train
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with: 
+            python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Get latest model URI
+        id: get_model
+        run: |
+          python - << 'EOF' > run_id.txt
+            import dagshub
+            from mlflow.tracking import MlflowClient
+
+            dagshub.init(repo_owner="frontenddevtrainer", repo_name="MLOps", mlflow=True)
+            client = MlflowClient()
+            exp = client.get_experiment_by_name("iris-demo")
+            run = client.search_runs(
+            [exp.experiment_id],
+            order_by=["attributes.start_time DESC"],
+            max_results=1
+            )[0]
+            print(run.info.run_id)
+            EOF
+                    echo "RUN_ID=$(cat run_id.txt)" >> $GITHUB_ENV
+                    echo "MODEL_URI=runs:/${{ env.RUN_ID }}/rf_model" >> $GITHUB_ENV
+
+      - name: Deploy to SageMaker
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-west-2
+          MODEL_URI: ${{ env.MODEL_URI }}
+          SAGEMAKER_ROLE: arn:aws:iam::750952118292:role/service-role/AmazonSageMaker-ExecutionRole-20250615T204995
+        run: |
+          python mlflow-demo/deploy.py
