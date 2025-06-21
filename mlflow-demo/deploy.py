@@ -16,7 +16,7 @@ def main():
     client = mlflow.deployments.get_deploy_client("sagemaker:/eu-west-2")
         
     deployment = client.create_deployment(
-        name="iris-demo-endpoint",
+        name="iris-demo-endpoint-demo",
         model_uri=model_uri,
         flavor="python_function",
         config={

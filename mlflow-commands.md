@@ -95,12 +95,15 @@ aws ecr get-login-password --region eu-west-2 | docker login --username AWS --pa
 
 docker build --platform=linux/amd64 --provenance=false --output oci-mediatypes=false,type=image,push=true -t 750952118292.dkr.ecr.eu-west-2.amazonaws.com/mlflow-pyfunc:2.22.0 .
 
-aws sagemaker-runtime invoke-endpoint `
-  --endpoint-name iris-demo-endpoint `
-  --body '{"instances": [[5.1, 3.5, 1.4, 0.2]]}' `
-  --content-type application/json `
-  output.json
+aws sagemaker-runtime invoke-endpoint --endpoint-name iris-demo-endpoint  --body '{"instances": [[5.1, 3.5, 1.4, 0.2]]}' --content-type application/json output.json
 
-# then read the result
 type output.json
 
+
+aws sagemaker delete-endpoint --endpoint-name iris-demo-endpoint
+python mlflow-demo/deploy.py
+
+mlflow models serve -m runs:/59d4b68a2fcd4477b7b61e532d5e6aa7/model --port 1234
+
+
+https://eu-west-2.console.aws.amazon.com/sagemaker/home?region=eu-west-2#/endpoints
