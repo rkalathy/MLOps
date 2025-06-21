@@ -1,21 +1,28 @@
 FROM python:3.9-slim
 
-# Install required packages
-RUN pip install mlflow==2.22.0 gunicorn flask scikit-learn pandas numpy
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /opt/ml/code
+RUN pip install --no-cache-dir \
+    mlflow==2.22.0 \
+    flask==2.3.3 \
+    gunicorn==21.2.0 \
+    pandas==2.2.3 \
+    numpy==2.0.2 \
+    scikit-learn==1.6.1 \
+    cloudpickle==3.0.0
 
-# Copy model and serving code
-COPY . .
+WORKDIR /opt/ml
 
-# Expose port for SageMaker
-EXPOSE 8080
+COPY mlflow-demo/serve.py /opt/ml/serve.py
+COPY requirements.txt /opt/ml/requirements.txt
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=TRUE
 ENV PYTHONDONTWRITEBYTECODE=TRUE
-ENV PATH="/opt/ml/code:${PATH}"
+ENV PATH="/opt/ml:${PATH}"
 
-# Set the entrypoint for SageMaker serving
-ENTRYPOINT ["python", "-m", "mlflow.models.container", "--enable-mlserver"]
+EXPOSE 8080
+
+ENTRYPOINT ["python", "/opt/ml/serve.py"]

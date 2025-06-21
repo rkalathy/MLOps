@@ -31,7 +31,7 @@ def parse_args():
         "--test-size",
         type=float,
         default=0.2,
-        help="Fraction of data to reserve for testing"
+        help="Frac of data to reserve for testing"
     )
     parser.add_argument(
         "--random-state",
