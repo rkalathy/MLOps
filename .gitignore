@@ -3,6 +3,7 @@ venv/
 ENV/
 env/
 .venv
+mlflow-env
 
 # Python Bytecode
 __pycache__/

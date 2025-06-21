@@ -1,43 +1,92 @@
+#!/usr/bin/env python3
 import argparse
 import mlflow
-import pandas as pd
-from sklearn.linear_model import Ridge
-from mlflow.models import infer_signature
-from mlflow.tracking import MlflowClient
+import mlflow.sklearn
+from sklearn.datasets import load_iris
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--alpha", type=float, default=1.0)
-parser.add_argument("--data",  type=str,   default="ml-loan-demo/raw_data.csv")
-parser.add_argument("--registered_model_name", type=str, default="ridge-model-demo")
-args = parser.parse_args()
-
-with mlflow.start_run() as run:
-    df = pd.read_csv(args.data)
-    df_clean = df.dropna()
-    df_clean.to_csv("ml-loan-demo/cleaned_data.csv", index=False)
-
-    X = df_clean[["x"]]
-    Y = df_clean["y"]
-    model = Ridge(alpha=args.alpha)
-    model.fit(X, Y)
-
-    print(f"Trained Ridge model: {model}")
-    print(f" • Coef:      {model.coef_}")
-    print(f" • Intercept: {model.intercept_}")
-
-    mlflow.sklearn.log_model(
-        model,
-        name="ridge-model",
-        input_example=X.head(1),
-        signature=infer_signature(X, Y),
-        registered_model_name=args.registered_model_name
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Train and log a RandomForest on Iris"
     )
+    parser.add_argument(
+        "--n-estimators",
+        type=int,
+        default=100,
+        help="Number of trees in the forest"
+    )
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=None,
+        help="Max depth of each tree"
+    )
+    parser.add_argument(
+        "--test-size",
+        type=float,
+        default=0.2,
+        help="Fraction of data to reserve for testing"
+    )
+    parser.add_argument(
+        "--random-state",
+        type=int,
+        default=42,
+        help="Random seed"
+    )
+    return parser.parse_args()
 
-    run_id = run.info.run_id
-    print(f"MLflow run ID: {run_id}")
+def load_data(test_size, random_state):
+    iris = load_iris()
+    X_train, X_test, y_train, y_test = train_test_split(
+        iris.data, iris.target,
+        test_size=test_size,
+        random_state=random_state,
+        stratify=iris.target
+    )
+    return X_train, X_test, y_train, y_test
 
-client = MlflowClient()
-all_versions = client.search_model_versions(f"name='{args.registered_model_name}'")
-mv = next(v for v in all_versions if v.run_id == run_id)
+def main():
+    args = parse_args()
 
-print(f"Registered as: models:/{args.registered_model_name}/{mv.version}")
+    # point MLflow at your tracking server if not default:
+    # mlflow.set_tracking_uri("http://localhost:5000")
+
+    with mlflow.start_run(run_name="rf_iris"):
+        # log hyper-params
+        mlflow.log_param("n_estimators", args.n_estimators)
+        mlflow.log_param("max_depth", args.max_depth)
+        mlflow.log_param("test_size", args.test_size)
+        mlflow.log_param("random_state", args.random_state)
+
+        X_train, X_test, y_train, y_test = load_data(
+            test_size=args.test_size,
+            random_state=args.random_state
+        )
+
+        # train
+        model = RandomForestClassifier(
+            n_estimators=args.n_estimators,
+            max_depth=args.max_depth,
+            random_state=args.random_state
+        )
+        model.fit(X_train, y_train)
+
+        # predict & log metrics
+        preds = model.predict(X_test)
+        acc = accuracy_score(y_test, preds)
+        mlflow.log_metric("accuracy", acc)
+
+        # register model
+        mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path="rf_model",
+            registered_model_name="MyRF"
+        )
+
+        print(f"Run ID: {mlflow.active_run().info.run_id}")
+        print(f"Accuracy: {acc:.4f}")
+
+if __name__ == "__main__":
+    main()
