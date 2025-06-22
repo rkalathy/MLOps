@@ -5,6 +5,7 @@ import pandas as pd
 
 from sagemaker.feature_store.feature_definition import FeatureDefinition, FeatureTypeEnum
 from sagemaker.feature_store.feature_group import FeatureGroup
+import time
 
 
 region = "eu-west-2"
@@ -13,7 +14,7 @@ sagemaker_client = boto_session.client("sagemaker")
 sagemaker_session = sagemaker.Session(boto_session=boto_session)
 role = "arn:aws:iam::750952118292:role/service-role/AmazonSageMaker-ExecutionRole-20250615T204995"
 bucket_name = "sagemaker-features-demo" 
-feature_group_name = "customers-feature-group"
+feature_group_name = "customers-feature-group-88"
 record_identifier_name = "customer_id"
 event_time_feature_name = "signup_date"
 
@@ -34,18 +35,41 @@ feature_group = FeatureGroup(
     sagemaker_session=sagemaker_session
 )
 
-sagemaker_client.create_feature_group(
-    FeatureGroupName=feature_group_name,
-    RecordIdentifierFeatureName=record_identifier_name,
-    EventTimeFeatureName=event_time_feature_name,
-    FeatureDefinitions=[fd.to_dict() for fd in feature_definitions],
-    RoleArn=role,
-    OnlineStoreConfig={"EnableOnlineStore": True},
-    OfflineStoreConfig={
-        "S3StorageConfig": {
-            "S3Uri": f"s3://{bucket_name}/feature-store/{feature_group_name}/"
-        },
-        "DisableGlueTableCreation": False
-    }
-)
+try:
+    sagemaker_client.describe_feature_group(FeatureGroupName=feature_group_name)
+    print(f" Feature group '{feature_group_name}' already exists. Skipping creation.")
+except sagemaker_client.exceptions.ResourceNotFound:
+    sagemaker_client.create_feature_group(
+        FeatureGroupName=feature_group_name,
+        RecordIdentifierFeatureName=record_identifier_name,
+        EventTimeFeatureName=event_time_feature_name,
+        FeatureDefinitions=[fd.to_dict() for fd in feature_definitions],
+        RoleArn=role,
+        OnlineStoreConfig={"EnableOnlineStore": True},
+        OfflineStoreConfig={
+            "S3StorageConfig": {
+                "S3Uri": f"s3://{bucket_name}/feature-store/{feature_group_name}/"
+            },
+            "DisableGlueTableCreation": False
+        }
+    )
+
+
+if __name__ == "__main__":
+    while True:
+        status = sagemaker_client.describe_feature_group(FeatureGroupName=feature_group_name)["FeatureGroupStatus"]
+        if status == "Created":
+            print("Feature group ready.")
+            break
+        elif status == "CreateFailed":
+            raise Exception("Feature group creation failed.")
+        time.sleep(5)
+
+    df["signup_date"] = pd.to_datetime(df["signup_date"]).dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+    print("Ingesting to feature store...")
+    feature_group.ingest(data_frame=df, max_workers=3, wait=True)
+    status = feature_group.ingest(data_frame=df, max_workers=3, wait=True)
+    print("Ingestion result:", status)
+    print("Ingestion complete.")
 
