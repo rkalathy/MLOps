@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: linear-model-with-pickle-output-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22, pipelines.kubeflow.org/pipeline_compilation_time: '2025-06-28T19:00:38.295914',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "Trains and saves a model
+      to model.pkl", "name": "Linear Model with Pickle Output"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.8.22}
+spec:
+  entrypoint: linear-model-with-pickle-output
+  templates:
+  - name: linear-model-with-pickle-output
+    dag:
+      tasks:
+      - {name: train-linear-model, template: train-linear-model}
+  - name: train-linear-model
+    container:
+      args: ['pip install scikit-learn pandas joblib && python -c "import numpy as
+          np; import joblib; from sklearn.linear_model import LinearRegression; X
+          = np.array([[1], [2], [3], [4]]); y = np.array([2, 4, 6, 8]); model = LinearRegression().fit(X,
+          y); joblib.dump(model, ''model.pkl''); print(''Model saved to model.pkl'')"']
+      command: [sh, -c]
+      image: python:3.9
+    outputs:
+      artifacts:
+      - {name: train-linear-model-model, path: /model.pkl}
+    metadata:
+      labels:
+        pipelines.kubeflow.org/kfp_sdk_version: 1.8.22
+        pipelines.kubeflow.org/pipeline-sdk-type: kfp
+        pipelines.kubeflow.org/enable_caching: "true"
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner
