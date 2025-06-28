@@ -1,3 +1,4 @@
 prometheus-api-client
 prometheus_client
 scipy
+scikit-learn
