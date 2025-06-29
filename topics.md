@@ -11,11 +11,16 @@
 - Monitoring
     - Data Drift and Trigger Demo (built on 21 Jun)
 - Kubeflow
-- EKS
+
 - Whylab(is it part of course??)
 - JD for MLops
 
 // 29 Jun
+
+- Azure ML.
+    - Pipeline
+    
+- EKS
 
 - Sagemaker Pipeline
     - Feature Eng
@@ -24,8 +29,5 @@
     - API Calling
     - e2e project using only sagemaker
     - Inference gen using realtime and batch.
-
-- Azure ML.
-    - Pipeline
 
 
